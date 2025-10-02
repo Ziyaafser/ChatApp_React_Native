@@ -2,6 +2,7 @@ import { signOut } from 'firebase/auth';
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -12,6 +13,7 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
+  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -22,23 +24,34 @@ import { auth, db } from '../firebase';
 
 export default function ProfileSetupScreen({ navigation }) {
   const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!auth.currentUser) {
       Alert.alert('You must be logged in first');
-      navigation.replace('Login'); // redirect if not authenticated
-    }
-  }, []);
-
-  const handleSaveProfile = async () => {
-    if (!username.trim()) {
-      Alert.alert('Username cannot be empty');
+      navigation.replace('Login');
       return;
     }
 
-    if (!auth.currentUser) {
-      Alert.alert('You must be logged in');
+    const fetchProfile = async () => {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setUsername(data.username || '');
+        setFullName(data.fullName || '');
+        setAvatarUrl(data.avatar || '');
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSaveProfile = async () => {
+    if (!username.trim() || !fullName.trim()) {
+      Alert.alert('All fields are required');
       return;
     }
 
@@ -52,22 +65,31 @@ export default function ProfileSetupScreen({ navigation }) {
       );
       const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
+      const takenByOther = querySnapshot.docs.some(
+        (doc) => doc.id !== auth.currentUser.uid
+      );
+      if (takenByOther) {
         Alert.alert('Username already taken');
         setLoading(false);
         return;
       }
 
-      // ✅ Save profile to Firestore
+      // ✅ Save to Firestore
       const userRef = doc(db, 'users', auth.currentUser.uid);
-      await setDoc(userRef, {
-        username: username.trim(),
-        email: auth.currentUser.email,
-        createdAt: serverTimestamp(),
-      });
+      await setDoc(
+        userRef,
+        {
+          username: username.trim(),
+          fullName: fullName.trim(),
+          email: auth.currentUser.email,
+          avatar: avatarUrl.trim() || null,
+          createdAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
 
       Alert.alert('Profile saved!');
-      // ✅ No need to navigate, App.js will handle redirect
+      // 👉 App.js will notice Firestore doc exists and redirect to ChatList automatically
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert('Error', error.message);
@@ -79,7 +101,6 @@ export default function ProfileSetupScreen({ navigation }) {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // App.js will redirect to LoginScreen
     } catch (error) {
       console.log('Error logging out:', error);
     }
@@ -89,24 +110,49 @@ export default function ProfileSetupScreen({ navigation }) {
     <View style={styles.container}>
       {/* Header with Logout */}
       <View style={styles.header}>
-        <Text style={styles.title}>Set Your Username</Text>
+        <Text style={styles.title}>Setup Profile</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Input */}
+      {/* Full Name */}
       <TextInput
         style={styles.input}
-        placeholder="Enter a unique username"
+        placeholder="Full Name"
+        value={fullName}
+        onChangeText={setFullName}
+      />
+
+      {/* Username */}
+      <TextInput
+        style={styles.input}
+        placeholder="Unique Username"
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
       />
 
+      {/* Avatar URL */}
+      <TextInput
+        style={styles.input}
+        placeholder="Avatar URL (optional)"
+        value={avatarUrl}
+        onChangeText={setAvatarUrl}
+        autoCapitalize="none"
+      />
+
+      {/* Avatar Preview */}
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 15 }}
+        />
+      ) : null}
+
       {/* Save Button */}
       <Button
-        title={loading ? 'Saving...' : 'Save'}
+        title={loading ? 'Saving...' : 'Save Profile'}
         onPress={handleSaveProfile}
         disabled={loading}
       />
