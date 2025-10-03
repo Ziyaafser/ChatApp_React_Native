@@ -353,11 +353,11 @@ export default function ChatListScreen({ navigation }) {
     dataToRender = dataToRender.filter((item) => item.type === 'user');
   } else if (filter === 'groups') {
     dataToRender = dataToRender.filter((item) => item.type === 'group');
-  }
-
-  return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.navbar}>
+  }                 
+    
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={styles.navbar}>
         <Text style={[styles.title, { color: theme.primaryText }]}>Messages</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity
@@ -446,7 +446,7 @@ export default function ChatListScreen({ navigation }) {
               setTimeout(() => searchInputRef.current?.focus(), 100);
             }}
           >
-            <Text style={styles.modalButtonText}>🔍 Search user by username</Text>
+            <Text style={styles.modalButtonText}>🔍  Search user by username</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -456,7 +456,7 @@ export default function ChatListScreen({ navigation }) {
               navigation.navigate('CreateGroup');
             }}
           >
-            <Text style={styles.modalButtonText}>👥 Create group</Text>
+            <Text style={styles.modalButtonText}>👥  Create group</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff3b30',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
+    width: 100,
     height: '100%',
     borderRadius: 5,
   },
@@ -583,5 +583,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalButton: { paddingVertical: 10 },
-  modalButtonText: { fontSize: 15, color: '#3483FA', fontWeight: 'bold' },
+  modalButtonText: { fontSize: 15, color: '#000000ff',fontWeight: 'bold' },
 });

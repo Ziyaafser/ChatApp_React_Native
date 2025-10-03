@@ -39,21 +39,20 @@ export default function App() {
             headerTintColor: '#fff',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
-            headerTitle: 'ChatApp',
           }}
         >
           {!user ? (
             <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} options={{title: 'OC Messenger'}}/>
+              <Stack.Screen name="Register" component={RegisterScreen} options={{title: 'OC Messenger'}} />
             </>
           ) : (
             <>
-              <Stack.Screen name="ChatList" component={ChatListScreen} />
+              <Stack.Screen name="ChatList" component={ChatListScreen} options={{title: 'OC Messenger'}}/>
               <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
               <Stack.Screen name="GroupChat" component={GroupChatScreen} />
-              <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
-              <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+              <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{title: 'OC Messenger'}}/>
+              <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} options={{title: 'OC Messenger'}}/>
             </>
           )}
         </Stack.Navigator>
