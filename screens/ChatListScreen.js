@@ -29,6 +29,7 @@ export default function ChatListScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [currentUserData, setCurrentUserData] = useState(null);
+  const [filter, setFilter] = useState('contacts'); // default contacts
 
   // ✅ Load current user's Firestore profile
   useEffect(() => {
@@ -66,7 +67,8 @@ export default function ChatListScreen({ navigation }) {
             const otherUser = otherUserSnap.data();
             chats.push({
               id: otherUserId,
-              name: otherUser.username || 'Unknown',
+              username: otherUser.username || '',
+              fullName: otherUser.fullName || '',
               avatar: otherUser.avatar || null,
               lastMessage: data.lastMessage || '',
               lastTime: data.lastTime || null,
@@ -95,7 +97,14 @@ export default function ChatListScreen({ navigation }) {
         (user) =>
           user.id !== currentUser.uid &&
           user.username?.toLowerCase().includes(text.toLowerCase())
-      );
+      )
+      .map((user) => ({
+        id: user.id,
+        username: user.username || '',
+        fullName: user.fullName || '',
+        avatar: user.avatar || null,
+      }));
+
     setSearchResults(users);
   };
 
@@ -115,38 +124,69 @@ export default function ChatListScreen({ navigation }) {
       {item.avatar ? (
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
       ) : (
-        <View style={[styles.avatar, styles.avatarPlaceholder]} />
+        <View style={[styles.avatar, styles.avatarPlaceholder]}>
+          <Text style={{ color: '#fff' }}>👤</Text>
+        </View>
       )}
+
       <View style={styles.middle}>
+        {/* Always show full name */}
         <Text style={[styles.name, { color: theme.primaryText }]}>
-          {item.name}
+          {item.fullName || 'Unknown Name'}
         </Text>
-        <Text
-          style={[styles.message, { color: theme.secondaryText }]}
-          numberOfLines={1}
-        >
-          {item.lastMessage}
-        </Text>
+
+        {/* Show username ONLY in search results (items without lastMessage) */}
+        {!item.lastMessage && (
+          <Text style={[styles.username, { color: theme.secondaryText }]}>
+            @{item.username || 'username'}
+          </Text>
+        )}
+
+        {/* Show last message ONLY in conversations */}
+        {item.lastMessage ? (
+          <Text
+            style={[styles.message, { color: theme.secondaryText }]}
+            numberOfLines={1}
+          >
+            {item.lastMessage}
+          </Text>
+        ) : null}
       </View>
-      <View style={styles.right}>
-        {item.lastTime && (
+
+      {/* Right side info only for conversations */}
+      {item.lastTime && (
+        <View style={styles.right}>
           <Text style={[styles.time, { color: theme.secondaryText }]}>
             {new Date(item.lastTime.toDate()).toLocaleTimeString([], {
               hour: '2-digit',
               minute: '2-digit',
             })}
           </Text>
-        )}
-        {item.unreadCount > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {item.unreadCount > 99 ? '99+' : item.unreadCount}
-            </Text>
-          </View>
-        )}
-      </View>
+          {item.unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {item.unreadCount > 99 ? '99+' : item.unreadCount}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
     </TouchableOpacity>
   );
+
+  // ✅ Decide what data to render based on filter
+  let dataToRender = [];
+  if (search) {
+    dataToRender = searchResults;
+  } else {
+    if (filter === 'contacts') {
+      dataToRender = conversations;
+    } else if (filter === 'groups') {
+      dataToRender = []; // placeholder
+    } else {
+      dataToRender = conversations; // "all" behaves like contacts for now
+    }
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -171,7 +211,9 @@ export default function ChatListScreen({ navigation }) {
               />
             ) : (
               <Image
-                source={{ uri: 'https://img.icons8.com/ios-filled/50/000000/user-male-circle.png' }}
+                source={{
+                  uri: 'https://img.icons8.com/ios-filled/50/000000/user-male-circle.png',
+                }}
                 style={styles.profileIcon}
               />
             )}
@@ -191,10 +233,61 @@ export default function ChatListScreen({ navigation }) {
         onChangeText={handleSearch}
       />
 
-      {/* Conversations */}
-      {conversations.length > 0 || searchResults.length > 0 ? (
+      {/* Filter Buttons */}
+      <View style={styles.filterRow}>
+        <TouchableOpacity
+          style={[styles.filterBtn, filter === 'all' && styles.filterBtnActive]}
+          onPress={() => setFilter('all')}
+        >
+          <Text
+            style={[
+              styles.filterText,
+              filter === 'all' && styles.filterTextActive,
+            ]}
+          >
+            All
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterBtn,
+            filter === 'groups' && styles.filterBtnActive,
+          ]}
+          onPress={() => setFilter('groups')}
+        >
+          <Text
+            style={[
+              styles.filterText,
+              filter === 'groups' && styles.filterTextActive,
+            ]}
+          >
+            Groups
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterBtn,
+            filter === 'contacts' && styles.filterBtnActive,
+          ]}
+          onPress={() => setFilter('contacts')}
+        >
+          <Text
+            style={[
+              styles.filterText,
+              filter === 'contacts' && styles.filterTextActive,
+            ]}
+          >
+            Contacts
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Conversations / Search Results */}
+      {dataToRender.length > 0 ? (
         <FlatList
-          data={search ? searchResults : conversations}
+          data={dataToRender}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
         />
@@ -236,7 +329,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 8,
+    marginBottom: 15,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     marginBottom: 10,
+  },
+  filterBtn: {
+    flex: 1,
+    marginHorizontal: 5,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  filterBtnActive: {
+    borderColor: '#3483FA',
+  },
+  filterText: {
+    color: '#666',
+    fontWeight: '500',
+  },
+  filterTextActive: {
+    color: '#3483FA',
+    fontWeight: '700',
   },
   card: {
     flexDirection: 'row',
@@ -248,10 +367,12 @@ const styles = StyleSheet.create({
   },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   avatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#aaa',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileIcon: {
     width: 32,
@@ -260,6 +381,7 @@ const styles = StyleSheet.create({
   },
   middle: { flex: 1 },
   name: { fontSize: 16, fontWeight: 'bold' },
+  username: { fontSize: 13, fontStyle: 'italic' },
   message: { fontSize: 14 },
   right: { alignItems: 'flex-end' },
   time: { fontSize: 12 },

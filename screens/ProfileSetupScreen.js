@@ -58,7 +58,6 @@ export default function ProfileSetupScreen({ navigation }) {
     setLoading(true);
 
     try {
-      // ✅ Check if username is taken
       const q = query(
         collection(db, 'users'),
         where('username', '==', username.trim())
@@ -74,7 +73,6 @@ export default function ProfileSetupScreen({ navigation }) {
         return;
       }
 
-      // ✅ Save to Firestore
       const userRef = doc(db, 'users', auth.currentUser.uid);
       await setDoc(
         userRef,
@@ -89,7 +87,6 @@ export default function ProfileSetupScreen({ navigation }) {
       );
 
       Alert.alert('Profile saved!');
-      // 👉 App.js will notice Firestore doc exists and redirect to ChatList automatically
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert('Error', error.message);
@@ -108,23 +105,38 @@ export default function ProfileSetupScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header with Logout */}
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Setup Profile</Text>
+        <Text style={styles.title}>User Profile</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Full Name */}
+      {/* Profile avatar + name */}
+      <View style={styles.profileSection}>
+        {avatarUrl ? (
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.defaultAvatar]}>
+            <Text style={{ color: '#666', fontSize: 28 }}>👤</Text>
+          </View>
+        )}
+        <Text style={styles.profileName}>
+          {fullName || 'Your Name'}
+        </Text>
+        <Text style={styles.profileUsername}>
+          @{username || 'username'}
+        </Text>
+      </View>
+
+      {/* Inputs */}
       <TextInput
         style={styles.input}
         placeholder="Full Name"
         value={fullName}
         onChangeText={setFullName}
       />
-
-      {/* Username */}
       <TextInput
         style={styles.input}
         placeholder="Unique Username"
@@ -132,8 +144,6 @@ export default function ProfileSetupScreen({ navigation }) {
         onChangeText={setUsername}
         autoCapitalize="none"
       />
-
-      {/* Avatar URL */}
       <TextInput
         style={styles.input}
         placeholder="Avatar URL (optional)"
@@ -142,31 +152,35 @@ export default function ProfileSetupScreen({ navigation }) {
         autoCapitalize="none"
       />
 
-      {/* Avatar Preview */}
-      {avatarUrl ? (
-        <Image
-          source={{ uri: avatarUrl }}
-          style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 15 }}
-        />
-      ) : null}
-
-      {/* Save Button */}
+      {/* Save */}
       <Button
         title={loading ? 'Saving...' : 'Save Profile'}
         onPress={handleSaveProfile}
         disabled={loading}
       />
+
+      {/* Action buttons */}
+      <View style={styles.actionColumn}>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Text style={styles.actionText}>Group Info</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Text style={styles.actionText}>Chat Settings</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
+    marginTop: 20,
   },
   title: { fontSize: 24, fontWeight: 'bold' },
   logoutBtn: {
@@ -176,6 +190,51 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   logoutText: { color: '#fff', fontWeight: 'bold' },
+
+  profileSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  avatar: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    marginBottom: 8,
+    backgroundColor: '#f2f2f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  defaultAvatar: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  profileName: { fontSize: 18, fontWeight: '600' },
+  profileUsername: { fontSize: 14, color: '#666' },
+
+    actionColumn: {
+    marginTop: 20,
+  },
+    actionBtn: {
+      backgroundColor: '#fff',       
+      paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginBottom: 12,
+
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+
+      elevation: 3,
+    },
+    actionText: {
+      color: '#333',   
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
