@@ -2,11 +2,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { auth } from './firebase';
 
-// Import screens
 import ChatListScreen from './screens/ChatListScreen';
 import ChatRoomScreen from './screens/ChatRoomScreen';
+import CreateGroupScreen from './screens/CreateGroupScreen';
+import GroupChatScreen from './screens/GroupChatScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileSetupScreen from './screens/ProfileSetupScreen';
 import RegisterScreen from './screens/RegisterScreen';
@@ -29,29 +31,33 @@ export default function App() {
   if (initializing) return null;
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: '#3483FA' },
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
-          headerTitle: 'ChatApp',
-        }}
-      >
-        {!user ? (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="ChatList" component={ChatListScreen} />
-            <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
-            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: { backgroundColor: '#3483FA' },
+            headerTintColor: '#fff',
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            headerTitle: 'ChatApp',
+          }}
+        >
+          {!user ? (
+            <>
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="ChatList" component={ChatListScreen} />
+              <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
+              <Stack.Screen name="GroupChat" component={GroupChatScreen} />
+              <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+              <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
