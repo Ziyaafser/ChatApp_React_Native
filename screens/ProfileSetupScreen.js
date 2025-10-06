@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
 import {
   collection,
@@ -12,13 +13,15 @@ import {
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  FlatList,
   Image,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  useColorScheme
+  useColorScheme,
 } from 'react-native';
 import { auth, db } from '../firebase';
 
@@ -30,16 +33,31 @@ export default function ProfileSetupScreen({ navigation }) {
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [editable, setEditable] = useState(false);
+
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [groupList, setGroupList] = useState([]);
+
+  const currentUser = auth.currentUser;
+
+  const colors = {
+    background: isDarkMode ? '#121212' : '#FFFFFF',
+    primaryText: isDarkMode ? '#FFFFFF' : '#000000',
+    secondaryText: isDarkMode ? '#BBBBBB' : '#999999',
+    inputBorder: isDarkMode ? '#2A2A2A' : '#ccc',
+    cardBackground: isDarkMode ? '#2A2A2A' : '#FFFFFF',
+    accent: '#3483FA',
+  };
 
   useEffect(() => {
-    if (!auth.currentUser) {
+    if (!currentUser) {
       Alert.alert('You must be logged in first');
       navigation.replace('Login');
       return;
     }
 
     const fetchProfile = async () => {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const userRef = doc(db, 'users', currentUser.uid);
       const snap = await getDoc(userRef);
       if (snap.exists()) {
         const data = snap.data();
@@ -52,6 +70,13 @@ export default function ProfileSetupScreen({ navigation }) {
     fetchProfile();
   }, []);
 
+  const fetchUserGroups = async () => {
+    const q = query(collection(db, 'groups'), where('members', 'array-contains', currentUser.uid));
+    const querySnapshot = await getDocs(q);
+    const groups = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setGroupList(groups);
+  };
+
   const handleSaveProfile = async () => {
     if (!username.trim() || !fullName.trim()) {
       Alert.alert('All fields are required');
@@ -59,37 +84,35 @@ export default function ProfileSetupScreen({ navigation }) {
     }
 
     setLoading(true);
-
     try {
       const q = query(collection(db, 'users'), where('username', '==', username.trim()));
       const querySnapshot = await getDocs(q);
-
-      const takenByOther = querySnapshot.docs.some((doc) => doc.id !== auth.currentUser.uid);
+      const takenByOther = querySnapshot.docs.some((doc) => doc.id !== currentUser.uid);
       if (takenByOther) {
         Alert.alert('Username already taken');
         setLoading(false);
         return;
       }
 
-      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const userRef = doc(db, 'users', currentUser.uid);
       await setDoc(
         userRef,
         {
           username: username.trim(),
           fullName: fullName.trim(),
-          email: auth.currentUser.email,
+          email: currentUser.email,
           avatar: avatarUrl.trim() || null,
           createdAt: serverTimestamp(),
         },
         { merge: true }
       );
 
+      setEditable(false);
       Alert.alert('Profile saved!');
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert('Error', error.message);
     }
-
     setLoading(false);
   };
 
@@ -101,27 +124,22 @@ export default function ProfileSetupScreen({ navigation }) {
     }
   };
 
-  // 🎨 Define colors based on theme
-  const colors = {
-    background: isDarkMode ? '#121212' : '#FFFFFF',
-    primaryText: isDarkMode ? '#FFFFFF' : '#000000',
-    secondaryText: isDarkMode ? '#BBBBBB' : '#999999',
-    inputBorder: isDarkMode ? '#2A2A2A' : '#ccc',
-    cardBackground: isDarkMode ? '#2A2A2A' : '#FFFFFF',
-    accent: '#3483FA',
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.primaryText }]}>User Profile</Text>
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={() => setEditable(!editable)} style={{ marginRight: 12 }}>
+            <Ionicons name={editable ? 'close' : 'create-outline'} size={24} color={colors.primaryText} />
+          </TouchableOpacity>
+          {/* <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity> */}
+        </View>
       </View>
 
-      {/* Profile avatar + name */}
+      {/* Profile Info */}
       <View style={styles.profileSection}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
@@ -138,73 +156,109 @@ export default function ProfileSetupScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* Inputs */}
-      <TextInput
-        style={[
-          styles.input,
-          {
-            borderColor: colors.inputBorder,
-            color: colors.primaryText,
-            backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
-          },
-        ]}
-        placeholder="Full Name"
-        placeholderTextColor={colors.secondaryText}
-        value={fullName}
-        onChangeText={setFullName}
-      />
-      <TextInput
-        style={[
-          styles.input,
-          {
-            borderColor: colors.inputBorder,
-            color: colors.primaryText,
-            backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
-          },
-        ]}
-        placeholder="Unique Username"
-        placeholderTextColor={colors.secondaryText}
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={[
-          styles.input,
-          {
-            borderColor: colors.inputBorder,
-            color: colors.primaryText,
-            backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
-          },
-        ]}
-        placeholder="Avatar URL (optional)"
-        placeholderTextColor={colors.secondaryText}
-        value={avatarUrl}
-        onChangeText={setAvatarUrl}
-        autoCapitalize="none"
-      />
-
-      {/* Save */}
-      <TouchableOpacity
-        onPress={handleSaveProfile}
-        disabled={loading}
-        style={[
-          styles.saveBtn,
-          { backgroundColor: loading ? '#999' : colors.accent },
-        ]}
-      >
-        <Text style={styles.saveText}>{loading ? 'Saving...' : 'Save Profile'}</Text>
-      </TouchableOpacity>
+      {/* Editable Inputs */}
+      {editable && (
+        <>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                borderColor: colors.inputBorder,
+                color: colors.primaryText,
+                backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
+              },
+            ]}
+            placeholder="Full Name"
+            placeholderTextColor={colors.secondaryText}
+            value={fullName}
+            onChangeText={setFullName}
+          />
+          <TextInput
+            style={[
+              styles.input,
+              {
+                borderColor: colors.inputBorder,
+                color: colors.primaryText,
+                backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
+              },
+            ]}
+            placeholder="Unique Username"
+            placeholderTextColor={colors.secondaryText}
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={[
+              styles.input,
+              {
+                borderColor: colors.inputBorder,
+                color: colors.primaryText,
+                backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
+              },
+            ]}
+            placeholder="Avatar URL (optional)"
+            placeholderTextColor={colors.secondaryText}
+            value={avatarUrl}
+            onChangeText={setAvatarUrl}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            onPress={handleSaveProfile}
+            disabled={loading}
+            style={[
+              styles.saveBtn,
+              { backgroundColor: loading ? '#999' : colors.accent },
+            ]}
+          >
+            <Text style={styles.saveText}>{loading ? 'Saving...' : 'Save Profile'}</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       {/* Action buttons */}
       <View style={styles.actionColumn}>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}>
+        <TouchableOpacity
+          style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}
+          onPress={async () => {
+            await fetchUserGroups();
+            setGroupModalVisible(true);
+          }}
+        >
           <Text style={[styles.actionText, { color: colors.primaryText }]}>Group Info</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}>
+        {/* <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.actionText, { color: colors.primaryText }]}>Chat Settings</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
+
+        <TouchableOpacity
+        onPress={handleLogout}
+        style={[styles.logoutBtnBottom]}>
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Logout</Text>
+       </TouchableOpacity>
+
+
+      {/* Group Info Modal */}
+      <Modal visible={groupModalVisible} animationType="slide" transparent={true}>
+        <View style={[styles.modalOverlay]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: colors.primaryText }]}>Your Groups</Text>
+            <FlatList
+              data={groupList}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Text style={{ color: colors.primaryText, paddingVertical: 6 }}>
+                  • {item.name ? item.name : `Unnamed Group (${item.id})`}
+                </Text>
+              )}
+            />
+            <TouchableOpacity onPress={() => setGroupModalVisible(false)} style={styles.closeModalBtn}>
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -278,14 +332,44 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
     elevation: 3,
   },
   actionText: {
     fontWeight: 'bold',
     fontSize: 16,
   },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: '#00000088',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    maxHeight: '60%',
+    padding: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  closeModalBtn: {
+    marginTop: 20,
+    paddingVertical: 10,
+    backgroundColor: '#3483FA',
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+
+  logoutBtnBottom: {
+  fontWeight: 'heavy',
+  backgroundColor: '#ff4d4d',
+  paddingVertical: 12,
+  borderRadius: 8,
+  alignItems: 'center',
+},
+
 });
