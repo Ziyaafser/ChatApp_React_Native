@@ -433,16 +433,32 @@ export default function ChatListScreen({ navigation }) {
     </View>
 
       {dataToRender.length > 0 ? (
-        <FlatList
-          data={dataToRender}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-        />
-      ) : (
-        <View style={styles.empty}>
-          <Text style={{ color: theme.secondaryText }}>No messages yet</Text>
+      <FlatList
+        data={dataToRender}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListFooterComponent={
+          <View style={styles.footerLogoContainer}>
+            <Image
+              source={require('../assets/images/Otalk_logo.png')}
+              style={styles.footerLogo}
+              resizeMode="contain"
+            />
+          </View>
+        }
+      />
+    ) : (
+      <View style={styles.empty}>
+        <Text style={{ color: theme.secondaryText }}>No messages yet</Text>
+        <View style={styles.footerLogoContainer}>
+          <Image
+            source={require('../assets//images/Otalk_logo.png')}
+            style={styles.footerLogo}
+            resizeMode="contain"
+          />
         </View>
-      )}
+      </View>
+    )}
 
      {showAddOptions && (
       <View
@@ -622,6 +638,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+
+  footerLogoContainer: {
+  alignItems: 'center',
+  paddingVertical: 20,
+  opacity: 0.6,
+  },
+  footerLogo: {
+    width: 120,
+    height: 100,
+    marginTop: 40,
+  },
+
   modalButton: { paddingVertical: 10 },
   modalButtonText: { fontSize: 15, color: '#000000ff',fontWeight: 'bold' },
 });

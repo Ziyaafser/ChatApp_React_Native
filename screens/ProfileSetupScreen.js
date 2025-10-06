@@ -238,6 +238,13 @@ export default function ProfileSetupScreen({ navigation }) {
         <Text style={{ color: '#fff', fontWeight: 'bold' }}>Logout</Text>
        </TouchableOpacity>
 
+       <View style={styles.logoContainer }>
+        <Image
+          source={require('../assets/images/Otalk_logo.png')} 
+          style={{ width: 100, height: 70, alignSelf: 'center', marginTop: 50 }}
+          resizeMode="contain"
+        />
+       </View>
 
       {/* Group Info Modal */}
       <Modal visible={groupModalVisible} animationType="slide" transparent={true}>
