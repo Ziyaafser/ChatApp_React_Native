@@ -397,20 +397,28 @@ export default function ChatListScreen({ navigation }) {
       />
 
       {/* filter tabs */}
-      <View style={styles.filterRow}>
-        {['all', 'contacts', 'groups'].map((type) => (
+     <View style={styles.filterRow}>
+      {['all', 'contacts', 'groups'].map((type) => {
+        const isActive = filter === type;
+        return (
           <TouchableOpacity
             key={type}
             onPress={() => setFilter(type)}
             style={[
               styles.filterBtn,
-              filter === type && styles.filterBtnActive,
+              {
+                backgroundColor: isActive ? theme.filterActiveBg : theme.filterBg,
+                borderColor: theme.filterBorder,
+              },
             ]}
           >
             <Text
               style={[
                 styles.filterText,
-                filter === type && styles.filterTextActive,
+                {
+                  color: isActive ? theme.filterActiveText : theme.filterText,
+                  fontWeight: isActive ? '700' : '500',
+                },
               ]}
             >
               {type === 'contacts'
@@ -420,8 +428,9 @@ export default function ChatListScreen({ navigation }) {
                 : 'All'}
             </Text>
           </TouchableOpacity>
-        ))}
-      </View>
+        );
+      })}
+    </View>
 
       {dataToRender.length > 0 ? (
         <FlatList
@@ -435,31 +444,43 @@ export default function ChatListScreen({ navigation }) {
         </View>
       )}
 
-      {showAddOptions && (
-        <View style={styles.dropdownOptions}>
-          <TouchableOpacity
-            style={styles.modalButton}
-            onPress={() => {
-              setFilter('contacts');
-              setSearch('');
-              setShowAddOptions(false);
-              setTimeout(() => searchInputRef.current?.focus(), 100);
-            }}
-          >
-            <Text style={styles.modalButtonText}>🔍  Search user by username</Text>
-          </TouchableOpacity>
+     {showAddOptions && (
+      <View
+        style={[
+          styles.dropdownOptions,
+          {
+            backgroundColor: theme.dropdownBg,
+            borderColor: theme.dropdownBorder,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.modalButton}
+          onPress={() => {
+            setFilter('contacts');
+            setSearch('');
+            setShowAddOptions(false);
+            setTimeout(() => searchInputRef.current?.focus(), 100);
+          }}
+        >
+          <Text style={[styles.modalButtonText, { color: theme.dropdownText }]}>
+            🔍  Search user by username
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.modalButton}
-            onPress={() => {
-              setShowAddOptions(false);
-              navigation.navigate('CreateGroup');
-            }}
-          >
-            <Text style={styles.modalButtonText}>👥  Create group</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        <TouchableOpacity
+          style={styles.modalButton}
+          onPress={() => {
+            setShowAddOptions(false);
+            navigation.navigate('CreateGroup');
+          }}
+        >
+          <Text style={[styles.modalButtonText, { color: theme.dropdownText }]}>
+            👥  Create group
+          </Text>
+        </TouchableOpacity>
+      </View>
+    )}
     </View>
   );
 }
@@ -470,14 +491,33 @@ const lightTheme = {
   secondaryText: '#999999',
   accent: '#3483FA',
   cardBg: '#FFFFFF',
+  filterBg: '#FFFFFF',
+  filterBorder: '#ccc',
+  filterActiveBg: '#3483FA',
+  filterActiveText: '#FFFFFF',
+  filterText: '#666',
+  dropdownBg: '#FFFFFF',
+  dropdownText: '#000000',
+  dropdownBorder: '#ccc',
 };
+
 const darkTheme = {
   background: '#121212',
   primaryText: '#FFFFFF',
   secondaryText: '#BBBBBB',
   accent: '#3483FA',
-  cardBg: '#121212',
+  cardBg: '#1E1E1E',
+  filterBg: '#1E1E1E',
+  filterBorder: '#333333',
+  filterActiveBg: '#3483FA',
+  filterActiveText: '#FFFFFF',
+  filterText: '#BBBBBB',
+  dropdownBg: '#1E1E1E',
+  dropdownText: '#FFFFFF',
+  dropdownBorder: '#333333',
+
 };
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15 },

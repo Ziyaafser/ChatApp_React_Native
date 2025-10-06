@@ -12,17 +12,20 @@ import {
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Button,
   Image,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme
 } from 'react-native';
 import { auth, db } from '../firebase';
 
 export default function ProfileSetupScreen({ navigation }) {
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
+
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -58,15 +61,10 @@ export default function ProfileSetupScreen({ navigation }) {
     setLoading(true);
 
     try {
-      const q = query(
-        collection(db, 'users'),
-        where('username', '==', username.trim())
-      );
+      const q = query(collection(db, 'users'), where('username', '==', username.trim()));
       const querySnapshot = await getDocs(q);
 
-      const takenByOther = querySnapshot.docs.some(
-        (doc) => doc.id !== auth.currentUser.uid
-      );
+      const takenByOther = querySnapshot.docs.some((doc) => doc.id !== auth.currentUser.uid);
       if (takenByOther) {
         Alert.alert('Username already taken');
         setLoading(false);
@@ -103,11 +101,21 @@ export default function ProfileSetupScreen({ navigation }) {
     }
   };
 
+  // 🎨 Define colors based on theme
+  const colors = {
+    background: isDarkMode ? '#121212' : '#FFFFFF',
+    primaryText: isDarkMode ? '#FFFFFF' : '#000000',
+    secondaryText: isDarkMode ? '#BBBBBB' : '#999999',
+    inputBorder: isDarkMode ? '#2A2A2A' : '#ccc',
+    cardBackground: isDarkMode ? '#2A2A2A' : '#FFFFFF',
+    accent: '#3483FA',
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>User Profile</Text>
+        <Text style={[styles.title, { color: colors.primaryText }]}>User Profile</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
@@ -119,53 +127,82 @@ export default function ProfileSetupScreen({ navigation }) {
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.defaultAvatar]}>
-            <Text style={{ color: '#666', fontSize: 28 }}>👤</Text>
+            <Text style={{ color: colors.secondaryText, fontSize: 28 }}>👤</Text>
           </View>
         )}
-        <Text style={styles.profileName}>
+        <Text style={[styles.profileName, { color: colors.primaryText }]}>
           {fullName || 'Your Name'}
         </Text>
-        <Text style={styles.profileUsername}>
+        <Text style={[styles.profileUsername, { color: colors.secondaryText }]}>
           @{username || 'username'}
         </Text>
       </View>
 
       {/* Inputs */}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            borderColor: colors.inputBorder,
+            color: colors.primaryText,
+            backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
+          },
+        ]}
         placeholder="Full Name"
+        placeholderTextColor={colors.secondaryText}
         value={fullName}
         onChangeText={setFullName}
       />
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            borderColor: colors.inputBorder,
+            color: colors.primaryText,
+            backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
+          },
+        ]}
         placeholder="Unique Username"
+        placeholderTextColor={colors.secondaryText}
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
       />
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            borderColor: colors.inputBorder,
+            color: colors.primaryText,
+            backgroundColor: isDarkMode ? '#1E1E1E' : '#F9F9F9',
+          },
+        ]}
         placeholder="Avatar URL (optional)"
+        placeholderTextColor={colors.secondaryText}
         value={avatarUrl}
         onChangeText={setAvatarUrl}
         autoCapitalize="none"
       />
 
       {/* Save */}
-      <Button
-        title={loading ? 'Saving...' : 'Save Profile'}
+      <TouchableOpacity
         onPress={handleSaveProfile}
         disabled={loading}
-      />
+        style={[
+          styles.saveBtn,
+          { backgroundColor: loading ? '#999' : colors.accent },
+        ]}
+      >
+        <Text style={styles.saveText}>{loading ? 'Saving...' : 'Save Profile'}</Text>
+      </TouchableOpacity>
 
       {/* Action buttons */}
       <View style={styles.actionColumn}>
-        <TouchableOpacity style={styles.actionBtn}>
-          <Text style={styles.actionText}>Group Info</Text>
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.actionText, { color: colors.primaryText }]}>Group Info</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
-          <Text style={styles.actionText}>Chat Settings</Text>
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.actionText, { color: colors.primaryText }]}>Chat Settings</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -173,7 +210,7 @@ export default function ProfileSetupScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20 },
 
   header: {
     flexDirection: 'row',
@@ -210,36 +247,45 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   profileName: { fontSize: 18, fontWeight: '600' },
-  profileUsername: { fontSize: 14, color: '#666' },
-
-    actionColumn: {
-    marginTop: 20,
-  },
-    actionBtn: {
-      backgroundColor: '#fff',       
-      paddingVertical: 14,
-      borderRadius: 10,
-      alignItems: 'center',
-      marginBottom: 12,
-
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
-
-      elevation: 3,
-    },
-    actionText: {
-      color: '#333',   
-      fontWeight: 'bold',
-      fontSize: 16,
-    },
+  profileUsername: { fontSize: 14 },
 
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
     padding: 10,
     marginBottom: 15,
-    borderRadius: 5,
+    borderRadius: 6,
+    fontSize: 15,
+  },
+
+  saveBtn: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  saveText: {
+    textAlign: 'center',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
+  actionColumn: {
+    marginTop: 20,
+  },
+  actionBtn: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  actionText: {
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

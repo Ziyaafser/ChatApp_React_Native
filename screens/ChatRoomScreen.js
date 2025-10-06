@@ -40,17 +40,23 @@ export default function ChatRoomScreen({ route, navigation }) {
   const [otherAvatar, setOtherAvatar] = useState('');
   const flatListRef = useRef(null);
   const colorScheme = useColorScheme();
-
   const isDark = colorScheme === 'dark';
 
   const COLORS = {
     background: isDark ? '#121212' : '#FFFFFF',
-    text: isDark ? '#FFFFFF' : '#000000',
-    secondaryText: isDark ? '#BBBBBB' : '#999999',
-    myBubble: '#DCF8C6',
-    otherBubble: '#F1F1F1',
+    bubbleMe: isDark ? '#005c4b' : '#DCF8C6',
+    bubbleOther: isDark ? '#262626' : '#F1F1F1',
+    textPrimary: isDark ? '#FFFFFF' : '#000000',
+    textSecondary: isDark ? '#BBBBBB' : '#777777',
+    dividerBg: isDark ? '#2A2A2A' : '#DDDDDD',
+    dividerText: isDark ? '#CCCCCC' : '#444444',
+    inputBg: isDark ? '#1E1E1E' : '#F0F0F0',
+    inputBorder: isDark ? '#333333' : '#CCCCCC',
+    headerBg: isDark ? '#1C1C1C' : '#3483FA',
+    sendIcon: '#3483FA',
   };
 
+  // Fetch other user info for header
   useEffect(() => {
     const fetchOtherUser = async () => {
       try {
@@ -60,11 +66,14 @@ export default function ChatRoomScreen({ route, navigation }) {
           const data = snap.data();
           const name = data.fullName || otherUser.username || 'Chat';
           const avatarUrl =
-            data.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+            data.avatar && data.avatar.trim() !== ''
+              ? data.avatar
+              : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
           setOtherFullName(name);
           setOtherAvatar(avatarUrl);
 
           navigation.setOptions({
+            headerStyle: { backgroundColor: COLORS.headerBg },
             headerTitle: '',
             headerLeft: () => (
               <View style={styles.headerLeftContainer}>
@@ -72,10 +81,16 @@ export default function ChatRoomScreen({ route, navigation }) {
                   style={styles.backButton}
                   onPress={() => navigation.goBack()}
                 >
-                  <Ionicons name="arrow-back" size={24} color="#fff" />
+                  <Ionicons
+                    name="arrow-back"
+                    size={24}
+                    color={isDark ? '#FFFFFF' : '#FFFFFF'}
+                  />
                 </TouchableOpacity>
                 <Image source={{ uri: avatarUrl }} style={styles.headerAvatar} />
-                <Text style={styles.headerName} numberOfLines={1}>{name}</Text>
+                <Text style={styles.headerName} numberOfLines={1}>
+                  {name}
+                </Text>
               </View>
             ),
           });
@@ -86,22 +101,29 @@ export default function ChatRoomScreen({ route, navigation }) {
     };
 
     fetchOtherUser();
-  }, [navigation, otherUser]);
+  }, [navigation, otherUser, isDark]);
 
+  // Reset unread count
   useEffect(() => {
     const resetUnread = async () => {
       const chatRef = doc(db, 'chats', chatId);
-      await setDoc(chatRef, {
-        unread: { [currentUser.uid]: 0 }
-      }, { merge: true });
+      await setDoc(
+        chatRef,
+        { unread: { [currentUser.uid]: 0 } },
+        { merge: true }
+      );
     };
     resetUnread();
   }, [chatId]);
 
+  // Listen for messages
   useEffect(() => {
-    const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('timestamp', 'asc'));
-    const unsubscribe = onSnapshot(q, snapshot => {
-      setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const q = query(
+      collection(db, 'chats', chatId, 'messages'),
+      orderBy('timestamp', 'asc')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setMessages(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return unsubscribe;
   }, [chatId]);
@@ -116,32 +138,46 @@ export default function ChatRoomScreen({ route, navigation }) {
       timestamp: serverTimestamp(),
     };
 
-    const msgRef = await addDoc(collection(db, 'chats', chatId, 'messages'), newMsg);
-    setSendingStatus(prev => ({ ...prev, [msgRef.id]: 'sending' }));
+    const msgRef = await addDoc(
+      collection(db, 'chats', chatId, 'messages'),
+      newMsg
+    );
+    setSendingStatus((prev) => ({ ...prev, [msgRef.id]: 'sending' }));
 
     const chatRef = doc(db, 'chats', chatId);
     const chatSnap = await getDoc(chatRef);
     const chatData = chatSnap.exists() ? chatSnap.data() : {};
 
-    await setDoc(chatRef, {
-      users: [currentUser.uid, otherUser.id],
-      lastMessage: newMsg.text,
-      lastTime: serverTimestamp(),
-      lastSender: currentUser.uid,
-      unread: {
-        [currentUser.uid]: 0,
-        [otherUser.id]: (chatData?.unread?.[otherUser.id] || 0) + 1,
-      }
-    }, { merge: true });
+    await setDoc(
+      chatRef,
+      {
+        users: [currentUser.uid, otherUser.id],
+        lastMessage: newMsg.text,
+        lastTime: serverTimestamp(),
+        lastSender: currentUser.uid,
+        unread: {
+          [currentUser.uid]: 0,
+          [otherUser.id]: (chatData?.unread?.[otherUser.id] || 0) + 1,
+        },
+      },
+      { merge: true }
+    );
 
     setMessage('');
   };
 
   const renderStatusIcon = (msgId, ts) => {
-    if (!ts) return <Ionicons name="time-outline" size={12} color="#999" />;
+    if (!ts)
+      return <Ionicons name="time-outline" size={12} color={COLORS.textSecondary} />;
     if (sendingStatus[msgId] === 'failed')
       return <Ionicons name="close-circle-outline" size={12} color="red" />;
-    return <Ionicons name="checkmark-done-outline" size={12} color="#999" />;
+    return (
+      <Ionicons
+        name="checkmark-done-outline"
+        size={12}
+        color={COLORS.textSecondary}
+      />
+    );
   };
 
   let lastDate = null;
@@ -150,7 +186,11 @@ export default function ChatRoomScreen({ route, navigation }) {
     const isMe = item.senderId === currentUser.uid;
     const messageDate = item.timestamp?.toDate?.();
     const dateLabel = messageDate
-      ? messageDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+      ? messageDate.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        })
       : null;
 
     const showDateDivider = dateLabel !== lastDate;
@@ -179,8 +219,14 @@ export default function ChatRoomScreen({ route, navigation }) {
     return (
       <>
         {showDateDivider && (
-          <View style={styles.dateDivider}>
-            <Text style={styles.dateDividerText}>{dateLabel}</Text>
+          <View
+            style={[styles.dateDivider, { backgroundColor: COLORS.dividerBg }]}
+          >
+            <Text
+              style={[styles.dateDividerText, { color: COLORS.dividerText }]}
+            >
+              {dateLabel}
+            </Text>
           </View>
         )}
 
@@ -190,14 +236,16 @@ export default function ChatRoomScreen({ route, navigation }) {
           style={[
             styles.messageBubble,
             {
-              backgroundColor: isMe ? COLORS.myBubble : COLORS.otherBubble,
+              backgroundColor: isMe ? COLORS.bubbleMe : COLORS.bubbleOther,
               alignSelf: isMe ? 'flex-end' : 'flex-start',
             },
           ]}
         >
-          <Text style={[styles.messageText, { color: COLORS.text }]}>{item.text}</Text>
+          <Text style={[styles.messageText, { color: COLORS.textPrimary }]}>
+            {item.text}
+          </Text>
           <View style={styles.metaRow}>
-            <Text style={[styles.timestamp, { color: COLORS.secondaryText }]}>
+            <Text style={[styles.timestamp, { color: COLORS.textSecondary }]}>
               {item.timestamp?.toDate
                 ? new Date(item.timestamp.toDate()).toLocaleTimeString([], {
                     hour: '2-digit',
@@ -219,41 +267,45 @@ export default function ChatRoomScreen({ route, navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <View style={{ flex: 1 }}>
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={item => item.id}
-            renderItem={renderItem}
-            style={{ flex: 1, paddingHorizontal: 10 }}
-            keyboardShouldPersistTaps="handled"
-            onContentSizeChange={() =>
-              flatListRef.current.scrollToEnd({ animated: true })
-            }
-            onLayout={() =>
-              flatListRef.current.scrollToEnd({ animated: true })
-            }
-          />
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 10 }}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: true })
+          }
+          onLayout={() =>
+            flatListRef.current?.scrollToEnd({ animated: true })
+          }
+        />
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: isDark ? '#2a2a2a' : '#eeeeee',
-                  color: COLORS.text,
-                },
-              ]}
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Type your message..."
-              placeholderTextColor={COLORS.secondaryText}
-              multiline
-            />
-            <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-              <MaterialIcons name="send" size={20} color="#3483FA" />
-            </TouchableOpacity>
-          </View>
+        {/* Input area */}
+        <View
+          style={[
+            styles.inputContainer,
+            {
+              backgroundColor: COLORS.inputBg,
+              borderColor: COLORS.inputBorder,
+            },
+          ]}
+        >
+          <TextInput
+            style={[
+              styles.input,
+              { color: COLORS.textPrimary, backgroundColor: COLORS.inputBg },
+            ]}
+            value={message}
+            onChangeText={setMessage}
+            placeholder="Type your message..."
+            placeholderTextColor={COLORS.textSecondary}
+            multiline
+          />
+          <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+            <MaterialIcons name="send" size={20} color={COLORS.sendIcon} />
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -262,32 +314,26 @@ export default function ChatRoomScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   messageBubble: {
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 10,
     marginVertical: 4,
     maxWidth: '70%',
-    marginHorizontal: 10, // ✅ horizontal spacing from screen edges
+    marginHorizontal: 5,
   },
-  messageText: {
-    fontSize: 15,
-  },
+  messageText: { fontSize: 15 },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginTop: 1,
+    marginTop: 2,
     gap: 5,
   },
-  timestamp: {
-    fontSize: 12,
-  },
+  timestamp: { fontSize: 12 },
   inputContainer: {
     flexDirection: 'row',
     padding: 8,
     borderTopWidth: 1,
-    borderColor: '#ccc',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
@@ -303,24 +349,18 @@ const styles = StyleSheet.create({
   },
   dateDivider: {
     alignSelf: 'center',
-    backgroundColor: '#ddd',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 4,
     marginVertical: 10,
   },
-  dateDividerText: {
-    fontSize: 12,
-    color: '#444',
-  },
+  dateDividerText: { fontSize: 12, fontWeight: '500' },
   headerLeftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingLeft: 5,
   },
-  backButton: {
-    marginRight: 8,
-  },
+  backButton: { marginRight: 8 },
   headerAvatar: {
     width: 40,
     height: 40,

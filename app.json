@@ -18,8 +18,10 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": ["READ_EXTERNAL_STORAGE"],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
+      
     },
    
     "plugins": [

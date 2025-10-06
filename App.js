@@ -9,6 +9,7 @@ import ChatListScreen from './screens/ChatListScreen';
 import ChatRoomScreen from './screens/ChatRoomScreen';
 import CreateGroupScreen from './screens/CreateGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
+import GroupInfoScreen from './screens/GroupInfoScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProfileSetupScreen from './screens/ProfileSetupScreen';
 import RegisterScreen from './screens/RegisterScreen';
@@ -53,6 +54,7 @@ export default function App() {
               <Stack.Screen name="GroupChat" component={GroupChatScreen} />
               <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{title: 'OC Messenger'}}/>
               <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} options={{title: 'OC Messenger'}}/>
+              <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{title: 'Group Info'}}/>
             </>
           )}
         </Stack.Navigator>
