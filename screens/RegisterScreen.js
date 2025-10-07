@@ -2,10 +2,12 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import {
   Image,
+  Keyboard,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
   useColorScheme,
 } from 'react-native';
@@ -37,57 +39,68 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* 🔹 Logo Area */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('../assets/images/Otalk_logo.png')} 
-          style={styles.logo}
-          resizeMode="contain"
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* 🔹 Logo Area */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/images/Otalk_logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text style={[styles.title, { color: colors.primaryText }]}>Register</Text>
+
+        {error ? <Text style={[styles.error, { color: 'red' }]}>{error}</Text> : null}
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.inputBg,
+              color: colors.primaryText,
+            },
+          ]}
+          placeholder="Email"
+          placeholderTextColor={colors.secondaryText}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          onChangeText={setEmail}
+          value={email}
         />
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.inputBg,
+              color: colors.primaryText,
+            },
+          ]}
+          placeholder="Password"
+          placeholderTextColor={colors.secondaryText}
+          secureTextEntry
+          onChangeText={setPassword}
+          value={password}
+        />
+
+        <TouchableOpacity
+          style={[styles.registerButton, { backgroundColor: colors.accent }]}
+          onPress={handleRegister}
+        >
+          <Text style={styles.registerButtonText}>Register</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={[styles.link, { color: colors.accent }]}>
+            Already have an account? Login
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={[styles.title, { color: colors.primaryText }]}>Register</Text>
-
-      {error ? <Text style={[styles.error, { color: 'red' }]}>{error}</Text> : null}
-
-      <TextInput
-        style={[
-          styles.input,
-          { borderColor: colors.border, backgroundColor: colors.inputBg, color: colors.primaryText },
-        ]}
-        placeholder="Email"
-        placeholderTextColor={colors.secondaryText}
-        autoCapitalize="none"
-        onChangeText={setEmail}
-        value={email}
-      />
-
-      <TextInput
-        style={[
-          styles.input,
-          { borderColor: colors.border, backgroundColor: colors.inputBg, color: colors.primaryText },
-        ]}
-        placeholder="Password"
-        placeholderTextColor={colors.secondaryText}
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
-
-      <TouchableOpacity
-        style={[styles.registerButton, { backgroundColor: colors.accent }]}
-        onPress={handleRegister}
-      >
-        <Text style={styles.registerButtonText}>Register</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={[styles.link, { color: colors.accent }]}>
-          Already have an account? Login
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 

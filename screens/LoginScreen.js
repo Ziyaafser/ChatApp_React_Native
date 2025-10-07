@@ -2,12 +2,14 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import {
   Image,
+  Keyboard,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
-  useColorScheme
+  useColorScheme,
 } from 'react-native';
 import { auth } from '../firebase';
 
@@ -37,63 +39,74 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* 🔹 Logo Area */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('../assets/images/Otalk_logo.png')} // ← replace with your image path
-          style={styles.logo}
-          resizeMode="contain"
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* 🔹 Logo Area */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/images/Otalk_logo.png')} // ← replace with your image path
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text style={[styles.title, { color: colors.primaryText }]}>Login</Text>
+
+        {error ? <Text style={[styles.error, { color: 'red' }]}>{error}</Text> : null}
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.inputBg,
+              color: colors.primaryText,
+            },
+          ]}
+          placeholder="Email"
+          placeholderTextColor={colors.secondaryText}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          onChangeText={setEmail}
+          value={email}
         />
+
+        <TextInput
+          style={[
+            styles.input,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.inputBg,
+              color: colors.primaryText,
+            },
+          ]}
+          placeholder="Password"
+          placeholderTextColor={colors.secondaryText}
+          secureTextEntry
+          onChangeText={setPassword}
+          value={password}
+        />
+
+        <TouchableOpacity
+          style={[styles.loginButton, { backgroundColor: colors.accent }]}
+          onPress={handleLogin}
+        >
+          <Text style={styles.loginButtonText}>Login</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={[styles.link, { color: colors.accent }]}>
+            Don’t have an account? Register
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={[styles.title, { color: colors.primaryText }]}>Login</Text>
-
-      {error ? <Text style={[styles.error, { color: 'red' }]}>{error}</Text> : null}
-
-      <TextInput
-        style={[
-          styles.input,
-          { borderColor: colors.border, backgroundColor: colors.inputBg, color: colors.primaryText },
-        ]}
-        placeholder="Email"
-        placeholderTextColor={colors.secondaryText}
-        autoCapitalize="none"
-        onChangeText={setEmail}
-        value={email}
-      />
-
-      <TextInput
-        style={[
-          styles.input,
-          { borderColor: colors.border, backgroundColor: colors.inputBg, color: colors.primaryText },
-        ]}
-        placeholder="Password"
-        placeholderTextColor={colors.secondaryText}
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
-
-      <TouchableOpacity
-        style={[styles.loginButton, { backgroundColor: colors.accent }]}
-        onPress={handleLogin}
-      >
-        <Text style={styles.loginButtonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={[styles.link, { color: colors.accent }]}>
-          Don’t have an account? Register
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 25 },
-  
+
   logoContainer: {
     alignItems: 'center',
   },

@@ -19,15 +19,15 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   ToastAndroid,
   TouchableOpacity,
-  View,
   useColorScheme,
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth, db } from '../firebase';
 
 export default function GroupChatScreen({ route, navigation }) {
@@ -39,8 +39,8 @@ export default function GroupChatScreen({ route, navigation }) {
   const [userMap, setUserMap] = useState({});
   const [currentUserName, setCurrentUserName] = useState('');
   const [mentionSuggestions, setMentionSuggestions] = useState([]);
-  const flatListRef = useRef(null);
   const [groupAvatar, setGroupAvatar] = useState('');
+  const flatListRef = useRef(null);
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -93,12 +93,11 @@ export default function GroupChatScreen({ route, navigation }) {
           const snap = await getDoc(doc(db, 'users', uid));
           if (snap.exists()) {
             const data = snap.data();
-            users[uid] = data.fullName || data.username || 'User'; // Prioritize fullName
+            users[uid] = data.fullName || data.username || 'User';
           }
         }
         setUserMap(users);
 
-        // Set header
         const usernames = Object.values(users);
         let displayNames = usernames.slice(0, 2).join(', ');
         if (usernames.length > 2) displayNames += ' and more';
@@ -280,12 +279,8 @@ export default function GroupChatScreen({ route, navigation }) {
     return (
       <>
         {showDate && (
-          <View
-            style={[styles.dateDivider, { backgroundColor: COLORS.dividerBg }]}
-          >
-            <Text
-              style={[styles.dateDividerText, { color: COLORS.dividerText }]}
-            >
+          <View style={[styles.dateDivider, { backgroundColor: COLORS.dividerBg }]}>
+            <Text style={[styles.dateDividerText, { color: COLORS.dividerText }]}>
               {dateLabel}
             </Text>
           </View>
@@ -309,8 +304,7 @@ export default function GroupChatScreen({ route, navigation }) {
           )}
           <Text style={{ fontSize: 15 }}>{formatMessageWithMentions(item.text)}</Text>
           <Text style={[styles.timestamp, { color: COLORS.secondaryText }]}>
-            {messageDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) ||
-              '...'}
+            {messageDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '...'}
           </Text>
         </TouchableOpacity>
       </>
@@ -322,7 +316,7 @@ export default function GroupChatScreen({ route, navigation }) {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={80}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
         <FlatList
           ref={flatListRef}
@@ -330,40 +324,35 @@ export default function GroupChatScreen({ route, navigation }) {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 10 }}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: true })
-          }
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          ListFooterComponent={
+            mentionSuggestions.length > 0 && (
+              <View style={[styles.mentionBox, { backgroundColor: COLORS.mentionBoxBg }]}>
+                {mentionSuggestions.map((u) => (
+                  <TouchableOpacity
+                    key={u}
+                    onPress={() => handleMentionSelect(u)}
+                    style={[styles.mentionItem, { borderColor: COLORS.mentionItemBorder }]}
+                  >
+                    <Text style={{ color: COLORS.text }}>@{u}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )
+          }
         />
 
-        {/* Mention Suggestions */}
-        {mentionSuggestions.length > 0 && (
-          <View
-            style={[
-              styles.mentionBox,
-              { backgroundColor: COLORS.mentionBoxBg },
-            ]}
-          >
-            {mentionSuggestions.map((u) => (
-              <TouchableOpacity
-                key={u}
-                onPress={() => handleMentionSelect(u)}
-                style={[
-                  styles.mentionItem,
-                  { borderColor: COLORS.mentionItemBorder },
-                ]}
-              >
-                <Text style={{ color: COLORS.text }}>@{u}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Input */}
+        {/* Input Section (moves with keyboard) */}
         <View
           style={[
             styles.inputContainer,
-            { borderColor: COLORS.inputBorder, backgroundColor: COLORS.inputBg },
+            {
+              borderColor: COLORS.inputBorder,
+              backgroundColor: COLORS.inputBg,
+              paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+            },
           ]}
         >
           <TextInput
@@ -394,11 +383,7 @@ const styles = StyleSheet.create({
     maxWidth: '70%',
     marginHorizontal: 5,
   },
-  timestamp: {
-    fontSize: 12,
-    marginTop: 2,
-    textAlign: 'right',
-  },
+  timestamp: { fontSize: 12, marginTop: 2, textAlign: 'right' },
   dateDivider: {
     alignSelf: 'center',
     borderRadius: 10,
@@ -406,10 +391,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     marginVertical: 10,
   },
-  dateDividerText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
+  dateDividerText: { fontSize: 12, fontWeight: '500' },
   inputContainer: {
     flexDirection: 'row',
     padding: 8,
@@ -424,16 +406,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
-  sendButton: {
-    marginLeft: 8,
-    padding: 8,
-  },
-  mentionBox: {
-    borderTopWidth: 1,
-    maxHeight: 120,
-  },
-  mentionItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-  },
+  sendButton: { marginLeft: 8, padding: 8 },
+  mentionBox: { borderTopWidth: 1, maxHeight: 120 },
+  mentionItem: { padding: 10, borderBottomWidth: 1 },
 });

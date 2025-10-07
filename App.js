@@ -3,8 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { auth } from './firebase';
 
+// Screens
 import ChatListScreen from './screens/ChatListScreen';
 import ChatRoomScreen from './screens/ChatRoomScreen';
 import CreateGroupScreen from './screens/CreateGroupScreen';
@@ -32,33 +34,66 @@ export default function App() {
   if (initializing) return null;
 
   return (
+    // Root wrapper for gesture handling and safe area support
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: '#3483FA' },
-            headerTintColor: '#fff',
-            headerTitleAlign: 'center',
-            headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
-          }}
-        >
-          {!user ? (
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} options={{title: 'OC Messenger'}}/>
-              <Stack.Screen name="Register" component={RegisterScreen} options={{title: 'OC Messenger'}} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="ChatList" component={ChatListScreen} options={{title: 'OC Messenger'}}/>
-              <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
-              <Stack.Screen name="GroupChat" component={GroupChatScreen} />
-              <Stack.Screen name="CreateGroup" component={CreateGroupScreen} options={{title: 'OC Messenger'}}/>
-              <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} options={{title: 'OC Messenger'}}/>
-              <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{title: 'Group Info'}}/>
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: { backgroundColor: '#3483FA' },
+              headerTintColor: '#fff',
+              headerTitleAlign: 'center',
+              headerTitleStyle: { fontWeight: 'bold', fontSize: 20 },
+            }}
+          >
+            {!user ? (
+              <>
+                <Stack.Screen
+                  name="Login"
+                  component={LoginScreen}
+                  options={{ title: 'OC Messenger' }}
+                />
+                <Stack.Screen
+                  name="Register"
+                  component={RegisterScreen}
+                  options={{ title: 'OC Messenger' }}
+                />
+              </>
+            ) : (
+              <>
+                <Stack.Screen
+                  name="ChatList"
+                  component={ChatListScreen}
+                  options={{ title: 'OC Messenger' }}
+                />
+                <Stack.Screen
+                  name="ChatRoom"
+                  component={ChatRoomScreen}
+                />
+                <Stack.Screen
+                  name="GroupChat"
+                  component={GroupChatScreen}
+                />
+                <Stack.Screen
+                  name="CreateGroup"
+                  component={CreateGroupScreen}
+                  options={{ title: 'OC Messenger' }}
+                />
+                <Stack.Screen
+                  name="ProfileSetup"
+                  component={ProfileSetupScreen}
+                  options={{ title: 'OC Messenger' }}
+                />
+                <Stack.Screen
+                  name="GroupInfo"
+                  component={GroupInfoScreen}
+                  options={{ title: 'Group Info' }}
+                />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
