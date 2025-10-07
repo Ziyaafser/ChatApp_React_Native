@@ -39,7 +39,6 @@ export default function ChatListScreen({ navigation }) {
 
   const searchInputRef = useRef(null);
 
-  // ✅ load current user data
   useEffect(() => {
     if (!currentUser) return;
     const fetchUserData = async () => {
@@ -52,7 +51,6 @@ export default function ChatListScreen({ navigation }) {
     fetchUserData();
   }, [currentUser]);
 
-  // ✅ live chats + groups
   useEffect(() => {
     if (!currentUser) return;
     const userId = currentUser.uid;
@@ -92,7 +90,7 @@ export default function ChatListScreen({ navigation }) {
       }
     );
 
-    // --- listen for group chats
+    // listen for group chats
     const groupsRef = collection(db, 'groups');
     const unsubscribeGroups = onSnapshot(groupsRef, async (groupSnap) => {
       let newGroups = [];
@@ -135,7 +133,6 @@ export default function ChatListScreen({ navigation }) {
     };
   }, [currentUser]);
 
-  // ✅ sort pinned first, then by lastTime
   const sortChats = (a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
@@ -144,7 +141,6 @@ export default function ChatListScreen({ navigation }) {
     return bTime - aTime;
   };
 
-  // ✅ search users + groups
   const handleSearch = async (text) => {
     setSearch(text);
     if (!text.trim()) {
@@ -196,7 +192,6 @@ export default function ChatListScreen({ navigation }) {
     });
   };
 
-  // ✅ clear unread + navigate
   const handleOpenChat = (item, isGroup) => {
     if (!currentUser) return;
 
@@ -229,7 +224,6 @@ export default function ChatListScreen({ navigation }) {
     }
   };
 
-  // ✅ toggle pin
   const togglePin = async (item) => {
     try {
       if (item.type === 'group') {
@@ -243,7 +237,6 @@ export default function ChatListScreen({ navigation }) {
     }
   };
 
-  // ✅ delete conversation
   const deleteConversation = async (item) => {
     try {
       if (item.type === 'group') {

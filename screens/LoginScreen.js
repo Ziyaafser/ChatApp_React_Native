@@ -41,10 +41,9 @@ export default function LoginScreen({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* 🔹 Logo Area */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../assets/images/Otalk_logo.png')} // ← replace with your image path
+            source={require('../assets/images/Otalk_logo.png')} 
             style={styles.logo}
             resizeMode="contain"
           />

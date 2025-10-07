@@ -41,7 +41,6 @@ export default function RegisterScreen({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* 🔹 Logo Area */}
         <View style={styles.logoContainer}>
           <Image
             source={require('../assets/images/Otalk_logo.png')}

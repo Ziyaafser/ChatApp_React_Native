@@ -1,16 +1,16 @@
 import { deleteDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    Image,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from 'react-native';
 import { auth, db } from '../firebase';
 
@@ -154,10 +154,8 @@ export default function GroupInfoScreen({ route, navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Group Name */}
       <Text style={[styles.groupName, { color: colors.primaryText }]}>{groupData.name}</Text>
 
-      {/* Group Image */}
       <View style={{ alignItems: 'center' }}>
         <Image
           source={{
@@ -167,7 +165,6 @@ export default function GroupInfoScreen({ route, navigation }) {
         />
       </View>
 
-      {/* Edit Buttons */}
       <View style={styles.imageActions}>
         <TouchableOpacity style={[styles.editBtn, { backgroundColor: colors.accent }]} onPress={() => setShowUrlModal(true)}>
           <Text style={styles.editText}>Change</Text>
@@ -179,7 +176,6 @@ export default function GroupInfoScreen({ route, navigation }) {
         ) : null}
       </View>
 
-      {/* Members List */}
       <Text style={[styles.sectionTitle, { color: colors.primaryText }]}>Members</Text>
       <FlatList
         data={members}
@@ -188,19 +184,16 @@ export default function GroupInfoScreen({ route, navigation }) {
         contentContainerStyle={{ paddingBottom: 160 }}
       />
 
-      {/* Leave Button */}
       <TouchableOpacity style={[styles.leaveBtn, { backgroundColor: colors.danger }]} onPress={leaveGroup}>
         <Text style={styles.leaveText}>Leave Group</Text>
       </TouchableOpacity>
 
-      {/* Delete Button (only show if currentUser is creator) */}
       {groupData.createdBy === currentUser.uid && (
         <TouchableOpacity style={[styles.deleteBtn, { backgroundColor: '#000' }]} onPress={deleteGroup}>
           <Text style={styles.deleteText}>Delete Group</Text>
         </TouchableOpacity>
       )}
 
-      {/* URL Input Modal */}
       <Modal visible={showUrlModal} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalBox, { backgroundColor: colors.card }]}>

@@ -126,7 +126,6 @@ export default function ProfileSetupScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.primaryText }]}>User Profile</Text>
         <View style={{ flexDirection: 'row' }}>
@@ -156,7 +155,6 @@ export default function ProfileSetupScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* Editable Inputs */}
       {editable && (
         <>
           <TextInput
@@ -216,7 +214,6 @@ export default function ProfileSetupScreen({ navigation }) {
         </>
       )}
 
-      {/* Action buttons */}
       <View style={styles.actionColumn}>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: colors.cardBackground }]}
@@ -246,7 +243,6 @@ export default function ProfileSetupScreen({ navigation }) {
         />
        </View>
 
-      {/* Group Info Modal */}
       <Modal visible={groupModalVisible} animationType="slide" transparent={true}>
         <View style={[styles.modalOverlay]}>
           <View style={[styles.modalContent, { backgroundColor: colors.cardBackground }]}>

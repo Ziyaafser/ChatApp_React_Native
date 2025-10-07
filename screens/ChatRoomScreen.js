@@ -56,7 +56,6 @@ export default function ChatRoomScreen({ route, navigation }) {
     sendIcon: '#3483FA',
   };
 
-  // Fetch other user info for header
   useEffect(() => {
     const fetchOtherUser = async () => {
       try {
@@ -103,7 +102,6 @@ export default function ChatRoomScreen({ route, navigation }) {
     fetchOtherUser();
   }, [navigation, otherUser, isDark]);
 
-  // Reset unread count
   useEffect(() => {
     const resetUnread = async () => {
       const chatRef = doc(db, 'chats', chatId);
