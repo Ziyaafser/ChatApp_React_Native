@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   registerButtonText: {
     color: '#fff',
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
 
